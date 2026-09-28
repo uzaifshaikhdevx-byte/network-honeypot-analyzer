@@ -1,0 +1,51 @@
+from collections import Counter
+from datetime import datetime
+
+LOG_FILE = "attacks.log"
+
+def analyze_logs():
+    passwords = []
+    users = []
+    ips = []
+
+    try:
+        with open(LOG_FILE, "r") as f:
+            for line in f:
+                if "IP:" in line and "User:" in line and "Pass:" in line:
+                    parts = line.strip().split(" | ")
+                    ip = parts[0].split("IP: ")[1]
+                    user = parts[1].split("User: ")[1]
+                    pwd = parts[2].split("Pass: ")[1]
+
+                    ips.append(ip)
+                    users.append(user)
+                    passwords.append(pwd)
+    except FileNotFoundError:
+        print(f"[!] Log file '{LOG_FILE}' not found. Run honeypot.py first.")
+        return
+
+    if not ips:
+        print("[!] No records found in log file.")
+        return
+
+    print("=" * 45)
+    print("      CYBER THREAT AUDIT REPORT      ")
+    print("=" * 45)
+    print(f"Report Generated   : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Total Attempts     : {len(ips)}")
+    print(f"Unique Attacker IPs: {len(set(ips))}")
+
+    print("\n[+] Top Targeted Usernames:")
+    for user, count in Counter(users).most_common(3):
+        print(f"    - '{user}' : {count} attempt(s)")
+
+    print("\n[+] Top Targeted Passwords (Brute-Force):")
+    for pwd, count in Counter(passwords).most_common(3):
+        print(f"    - '{pwd}' : {count} attempt(s)")
+
+    top_ip, ip_count = Counter(ips).most_common(1)[0]
+    print(f"\n[+] Primary Attacker IP : {top_ip} ({ip_count} connections)")
+    print("=" * 45)
+
+if __name__ == "__main__":
+    analyze_logs()
